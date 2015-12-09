@@ -453,7 +453,15 @@ class ProductControllerCore extends FrontController
 
                 $combinations[$row['id_product_attribute']]['attributes_values'][$row['id_attribute_group']] = $row['attribute_name'];
                 $combinations[$row['id_product_attribute']]['attributes'][] = (int)$row['id_attribute'];
-                $combinations[$row['id_product_attribute']]['price'] = (float)$row['price'];
+                 $id_customer = (isset($this->context->customer) ? (int)$this->context->customer->id : 0);
+                    $id_group = (int)Group::getCurrent()->id;
+                $id_country = $id_customer ? (int)Customer::getCurrentCountry($id_customer) : (int)Tools::getCountry();
+                $group_reduction=0;
+                $group_reduction = GroupReduction::getValueForProduct($this->product->id, $id_group);
+                if ($group_reduction === false) {
+                    $group_reduction = Group::getReduction((int)$this->context->cookie->id_customer) / 100;
+                }
+                $combinations[$row['id_product_attribute']]['price'] = (float)$row['price']-(float)$row['price']*$group_reduction;
 
                 // Call getPriceStatic in order to set $combination_specific_price
                 if (!isset($combination_prices_set[(int)$row['id_product_attribute']])) {
